@@ -14,44 +14,51 @@ The process behind converting custom layers involves the following.
 * Edit the CPU Extension Template Files
 * Execute the Model with the Custom Layer
 
-The Two popular pose detection methods are YOLO and SSD. The trade-off between speed and accurary for both the odels  is accompined with the computational power. YOLO model is suitabled for high speed output where the accuracy is not that high, whereas the SSD provides higher accuracy with high speed output for a higher computational time. Here I choose SSD MobileNet V2 COCO model. 
+The two popular pose detection methods are YOLO and SSD. The trade-off between speed and accurary for both the models are accompanied with the computational power. YOLO model is suitabled for high speed output where the accuracy is not that high, whereas the SSD provides higher accuracy with high speed output for a higher computational time. Here I choose SSD MobileNet V2 COCO model. 
  
 * First download the SSD MobileNet V2 COCO model from Tensorflow
-'''
+
+```
 wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz
-'''
+```
+
 ![Generating IR](./images/step1.png)
 
 * Use tar -xvf command and to unpack it.
 
-'''
+```
 tar -xvf ssd_mobilenet_v2_coco_2018_03_29.tar.gz
-'''
+```
 
 ![Generating IR](./images/step2.png)
 
-* To covert the TF model, feed in the downloaded SSD MobileNet V2 COCO model's .pb file using the model optimizer.
+* To convert the TF model, feed in the downloaded SSD MobileNet V2 COCO model's .pb file using the model optimizer.
 
-'''
+```
 python /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model frozen_inference_graph.pb --tensorflow_object_detection_api_pipeline_config pipeline.config --reverse_input_channels --tensorflow_use_custom_operations_config /opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
-'''
+```
 
 ![Generating IR](./images/step3.png)
 
  If the conversion is sucessful, you can find the .xml file and .bin file. The Execution Time is about 81.77 seconds.
 
 The Generated IR model files are : 
-    * XML file: /home/workspace/ssd_mobilenet_v2_coco_2018_03_29/./frozen_inference_graph.xml
-    * BIN file: /home/workspace/ssd_mobilenet_v2_coco_2018_03_29/./frozen_inference_graph.bin
+* XML file: /home/workspace/ssd_mobilenet_v2_coco_2018_03_29/./frozen_inference_graph.xml
+* BIN file: /home/workspace/ssd_mobilenet_v2_coco_2018_03_29/./frozen_inference_graph.bin
 
 
 ### To run this project, use the following commands:
 
 #### Using  a video file
+
+```
 python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m your-model.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.6 | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 24 -i - http://0.0.0.0:3004/fac.ffm
+```
 
 #### Using a camera stream 
+```
 python main.py -i CAM -m your-model.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.6 | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 24 -i - http://0.0.0.0:3004/fac.ffm
+```
 
 ## Comparing Model Performance
 
