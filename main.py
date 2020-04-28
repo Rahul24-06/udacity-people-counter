@@ -26,6 +26,7 @@ import time
 import socket
 import json
 import cv2
+import math
 
 import logging as log
 import paho.mqtt.client as mqtt
@@ -39,7 +40,6 @@ IPADDRESS = socket.gethostbyname(HOSTNAME)
 MQTT_HOST = IPADDRESS
 MQTT_PORT = 3001
 MQTT_KEEPALIVE_INTERVAL = 60
-
 
 def build_argparser():
     """
@@ -62,9 +62,9 @@ def build_argparser():
                              "CPU, GPU, FPGA or MYRIAD is acceptable. Sample "
                              "will look for a suitable plugin for device "
                              "specified (CPU by default)")
-    parser.add_argument("-pt", "--prob_threshold", type=float, default=0.5,
+    parser.add_argument("-pt", "--prob_threshold", type=float, default=0.55,
                         help="Probability threshold for detections filtering"
-                        "(0.5 by default)")
+                        "(0.55 by default)")
     return parser
 
 
@@ -74,10 +74,11 @@ def connect_mqtt():
     client.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
     return client
 
-def draw_outputs(coords, frame, initial_w, initial_h):
+def draw_outputs(coords, frame, initial_w, initial_h, x, k):
         # Draw output
         # print('Draw Output...')
-        current_count = 0
+        current_count = 0     
+        ed = x
         for obj in coords[0][0]:
             # Draw bounding box for object when it's probability is more than the specified threshold
             if obj[2] > prob_threshold:
@@ -88,17 +89,28 @@ def draw_outputs(coords, frame, initial_w, initial_h):
                 cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 0, 255), 1)
                 current_count = current_count + 1
                 #print(current_count)
-        return frame, current_count
+                
+                c_x = frame.shape[1]/2
+                c_y = frame.shape[0]/2    
+                mid_x = (xmax + xmin)/2
+                mid_y = (ymax + ymin)/2
+                
+                # Calculating distance 
+                ed =  math.sqrt(math.pow(mid_x - c_x, 2) +  math.pow(mid_y - c_y, 2) * 1.0) 
+                k = 0
+
+        if current_count < 1:
+            k += 1
+            
+        if ed>0 and k < 10:
+            current_count = 1 
+            k += 1 
+            if k > 100:
+                k = 0
+                
+        return frame, current_count, ed, k
 
 def infer_on_stream(args, client):
-    """
-    Initialize the inference network, stream video to network,
-    and output stats and video.
-
-    :param args: Command line arguments parsed by `build_argparser()`
-    :param client: MQTT client
-    :return: None
-    """
     # Initialise the class
     infer_network = Network()
     # Set Probability threshold for detections
@@ -145,7 +157,8 @@ def infer_on_stream(args, client):
     initial_w = cap.get(3)
     initial_h = cap.get(4)
     prob_threshold = args.prob_threshold
-
+    temp = 0
+    tk = 0
     
     # Loop until stream is over
     while cap.isOpened():
@@ -175,7 +188,7 @@ def infer_on_stream(args, client):
             result = infer_network.get_output(cur_request_id)
             
             # Draw Bounting Box
-            frame, current_count = draw_outputs(result, frame, initial_w, initial_h)
+            frame, current_count, d, tk = draw_outputs(result, frame, initial_w, initial_h, temp, tk)
             
             # Printing Inference Time 
             inf_time_message = "Inference time: {:.3f}ms".format(det_time * 1000)
@@ -191,15 +204,12 @@ def infer_on_stream(args, client):
                 duration = int(time.time() - start_time) 
                 client.publish("person/duration", json.dumps({"duration": duration}))
            
-            # Adding overlays to the frame
-            txt1 = "Duration: %d s " %duration
-            cv2.putText(frame, txt1, (15, 45), cv2.FONT_HERSHEY_COMPLEX, 0.5, color, 1)
-            
-            txt = "Total count: %d " %total_count
-            cv2.putText(frame, txt, (15, 60), cv2.FONT_HERSHEY_COMPLEX, 0.5, color, 1)
+            # Adding overlays to the frame            
+            txt2 = "Distance: %d" %d + " Lost frame: %d" %tk
+            cv2.putText(frame, txt2, (15, 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, color, 1)
             
             txt2 = "Current count: %d " %current_count
-            cv2.putText(frame, txt2, (15, 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, color, 1)
+            cv2.putText(frame, txt2, (15, 45), cv2.FONT_HERSHEY_COMPLEX, 0.5, color, 1)
 
             if current_count > 3:
                 txt2 = "Alert! Maximum count reached"
@@ -215,6 +225,7 @@ def infer_on_stream(args, client):
             client.publish("person", json.dumps({"count": current_count})) # People Count
 
             last_count = current_count
+            temp = d
 
             if key_pressed == 27:
                 break
