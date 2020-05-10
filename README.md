@@ -2,11 +2,12 @@
 
 Investigate different pre-trained models for person detection, and detect the number of people in the frame, and the time spent there.
 
-## Demo Video of the Project
+## Demo Video of the Project with UI - FFMPEG Server
 
-[![Working Video](./images/people-counter-image.png)](https://youtu.be/PxbYqBZgbQE "Working of the Project - Click to Watch!")
+[![Working Video](./images/UI-image.png)](https://youtu.be/PxbYqBZgbQE "Working of the Project - Click to Watch!")
 
 
+---
 
 | Details            |              |
 |-----------------------|---------------|
