@@ -1,5 +1,13 @@
 # Deploy a People Counter App at the Edge
 
+Investigate different pre-trained models for person detection, and detect the number of people in the frame, and the time spent there.
+
+## Demo Video of the Project
+
+[![Working Video](./images/people-counter-image.png)](https://youtu.be/PxbYqBZgbQE "Working of the Project - Click to Watch!")
+
+
+
 | Details            |              |
 |-----------------------|---------------|
 | Programming Language: |  Python 3.5 or 3.6 |
@@ -200,3 +208,11 @@ CAMERA_FEED_SERVER: "http://localhost:3004"
 ...
 MQTT_SERVER: "ws://localhost:3002"
 ```
+
+*If you faced any issues in building this project, feel free to ask me. Please do suggest new projects that you want me to do next.*
+
+*Share this video if you like.*
+
+*Happy to have you subscribed: https://www.youtube.com/c/rahulkhanna24june?sub_confirmation=1*
+
+**Thanks for reading!**
