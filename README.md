@@ -7,7 +7,7 @@ Investigate different pre-trained models for person detection, and detect the nu
 [![Working Video](./images/UI-image.png)](https://youtu.be/PxbYqBZgbQE "Working of the Project - Click to Watch!")
 
 
-## Demo Video of the Project - OpenCV window https://youtu.be/PxbYqBZgbQE
+## Demo Video of the Project - OpenCV window https://youtu.be/C6CS51BFdlA
 
 [![Working Video](./images/GUI-image.png)](https://youtu.be/C6CS51BFdlA "Working of the Project - Click to Watch!")
 
